@@ -1,6 +1,6 @@
 function drive() {
   //📁 folder name
-  const folderNames = ["SAURAV", "Shubham"];
+  const folderNames = ["SAURAV","SHUBHAM"];
 
   const ss = SpreadsheetApp.getActive();
 
@@ -15,7 +15,7 @@ function drive() {
   };
 
   const recurse = (folder, path, data) => {
-    const fullPath = path + "/" + folder.getName();
+    const fullPath = path + "" + folder.getName();
 
     const files = folder.getFiles();
     while (files.hasNext()) {
@@ -26,7 +26,7 @@ function drive() {
       const date = formatDate(file.getDateCreated());
       const html = `<td><a href='https://drive.google.com/uc?export=download&id=${id}'>${name}</a></td><td>${size}</td><td>${date}</td>`;
 
-      data.push([html, name, id, size, date, fullPath]);
+      data.push([name, id, size, date, fullPath,html]);
     }
 
     const subfolders = folder.getFolders();
@@ -38,7 +38,7 @@ function drive() {
   folderNames.forEach(app => {
     const sheet = ss.getSheetByName(app) || ss.insertSheet(app);
     sheet.clear();
-    sheet.appendRow(["HTML Row", "File Name", "File ID", "Size", "Last Updated", "Full Path"]);
+    sheet.appendRow([ "File Name", "File ID", "Size", "Last Updated", "Full Path","HTML Row"]);
 
     const homeFolderIterator = DriveApp.getFoldersByName(app);
     if (!homeFolderIterator.hasNext()) {
@@ -52,8 +52,8 @@ function drive() {
 
     if (data.length) {
       data.sort((a, b) => {
-        const dateA = new Date(a[4].split("-").reverse().join("-"));
-        const dateB = new Date(b[4].split("-").reverse().join("-"));
+        const dateA = new Date(a[3].split("-").reverse().join("-"));
+        const dateB = new Date(b[3].split("-").reverse().join("-"));
         return dateA - dateB;
       });
 
