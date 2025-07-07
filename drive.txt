@@ -38,7 +38,7 @@ function drive() {
   folderNames.forEach(app => {
     const sheet = ss.getSheetByName(app) || ss.insertSheet(app);
     sheet.clear();
-    sheet.appendRow([ "File Name", "File ID", "Size", "Last Updated", "Full Path","HTML Row"]);
+    sheet.appendRow([ "File Name", "File ID", "Size", "File_Created", "Full Path","HTML Row"]);
 
     const homeFolderIterator = DriveApp.getFoldersByName(app);
     if (!homeFolderIterator.hasNext()) {
