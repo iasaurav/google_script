@@ -3,7 +3,10 @@ function drive() {
   const sheet = sp.getSheetByName("Sheet1");
 
   // Get folder names from column A starting at A2
-  const folderNames = sheet.getRange("A2:A" + sheet.getLastRow()).getValues().flat().filter(name => name);
+  const folderNames = sheet.getRange("A2:A" + sheet.getLastRow())
+    .getValues()
+    .flat()
+    .filter(name => name);
 
   const formatSize = (bytes) => {
     if (!bytes) return "0 B";
@@ -24,9 +27,10 @@ function drive() {
       const name = file.getName();
       const id = file.getId();
       const size = formatSize(file.getSize());
-      const date = formatDate(file.getDateCreated());
-      
-      data.push([name, id, size, date, fullPath]);
+      const date = formatDate(file.getLastUpdated()); // or file.getDateCreated()
+      const link = `=HYPERLINK("https://drive.google.com/file/d/${id}", "${name}")`;
+
+      data.push([link, id, size, date, fullPath]);
     }
 
     const subfolders = folder.getFolders();
@@ -41,7 +45,7 @@ function drive() {
     const homeFolderIterator = DriveApp.getFoldersByName(app);
     if (!homeFolderIterator.hasNext()) {
       Logger.log(`❌ Folder not found: '${app}'`);
-      return; // ❗️Skip creating a sheet if folder doesn't exist
+      return; // Skip if folder doesn't exist
     }
 
     const homeFolder = homeFolderIterator.next();
@@ -49,16 +53,18 @@ function drive() {
     recurse(homeFolder, "", data);
 
     if (data.length) {
+      // Sort by date (ascending)
       data.sort((a, b) => {
         const dateA = new Date(a[3].split("-").reverse().join("-"));
         const dateB = new Date(b[3].split("-").reverse().join("-"));
         return dateA - dateB;
       });
 
+      // Create or clear sheet
       const outputSheet = sp.getSheetByName(app) || sp.insertSheet(app);
       outputSheet.clear();
-      outputSheet.appendRow([ "File Name", "File ID", "Size", "Last Updated", "Full Path"]);
-      outputSheet.getRange(2, 1, data.length, 6).setValues(data);
+      outputSheet.appendRow(["HTML Row", "File ID", "Size", "Last Updated", "Full Path"]);
+      outputSheet.getRange(2, 1, data.length, 5).setValues(data);
     }
   });
 }
