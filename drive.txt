@@ -24,9 +24,8 @@ function drive() {
       const id = file.getId();
       const size = formatSize(file.getSize());
       const date = formatDate(file.getDateCreated());
-      const html = `<td><a href='https://drive.google.com/uc?export=download&id=${id}'>${name}</a></td><td>${size}</td><td>${date}</td>`;
-
-      data.push([name, id, size, date, fullPath,html]);
+      
+      data.push([name, id, size, date, fullPath]);
     }
 
     const subfolders = folder.getFolders();
@@ -38,7 +37,7 @@ function drive() {
   folderNames.forEach(app => {
     const sheet = ss.getSheetByName(app) || ss.insertSheet(app);
     sheet.clear();
-    sheet.appendRow([ "File Name", "File ID", "Size", "File_Created", "Full Path","HTML Row"]);
+    sheet.appendRow([ "File Name", "File ID", "Size", "File_Created", "Full Path"]);
 
     const homeFolderIterator = DriveApp.getFoldersByName(app);
     if (!homeFolderIterator.hasNext()) {
