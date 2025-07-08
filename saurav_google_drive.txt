@@ -1,0 +1,64 @@
+function drive() {
+  const sp = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = sp.getSheetByName("Sheet1");
+
+  // Get folder names from column A starting at A2
+  const folderNames = sheet.getRange("A2:A" + sheet.getLastRow()).getValues().flat().filter(name => name);
+
+  const formatSize = (bytes) => {
+    if (!bytes) return "0 B";
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / 1024 ** i).toFixed(2) + " " + ["B", "KB", "MB", "GB", "TB"][i];
+  };
+
+  const formatDate = (date) => {
+    return Utilities.formatDate(date, Session.getScriptTimeZone(), "dd-MM-yyyy");
+  };
+
+  const recurse = (folder, path, data) => {
+    const fullPath = path + "/" + folder.getName();
+
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      const file = files.next();
+      const name = file.getName();
+      const id = file.getId();
+      const size = formatSize(file.getSize());
+      const date = formatDate(file.getDateCreated());
+      
+      data.push([name, id, size, date, fullPath]);
+    }
+
+    const subfolders = folder.getFolders();
+    while (subfolders.hasNext()) {
+      recurse(subfolders.next(), fullPath, data);
+    }
+  };
+
+  folderNames.forEach((app) => {
+    Logger.log("Processing folder: " + app);
+
+    const homeFolderIterator = DriveApp.getFoldersByName(app);
+    if (!homeFolderIterator.hasNext()) {
+      Logger.log(`❌ Folder not found: '${app}'`);
+      return; // ❗️Skip creating a sheet if folder doesn't exist
+    }
+
+    const homeFolder = homeFolderIterator.next();
+    const data = [];
+    recurse(homeFolder, "", data);
+
+    if (data.length) {
+      data.sort((a, b) => {
+        const dateA = new Date(a[3].split("-").reverse().join("-"));
+        const dateB = new Date(b[3].split("-").reverse().join("-"));
+        return dateA - dateB;
+      });
+
+      const outputSheet = sp.getSheetByName(app) || sp.insertSheet(app);
+      outputSheet.clear();
+      outputSheet.appendRow([ "File Name", "File ID", "Size", "Last Updated", "Full Path"]);
+      outputSheet.getRange(2, 1, data.length, 6).setValues(data);
+    }
+  });
+}
